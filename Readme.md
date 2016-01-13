@@ -14,7 +14,7 @@ Create an ```index.js``` file and add the following content:
 // File: index.js
 
 import Confim from 'confim';
-let options = {path: 'config.json, defaultEnvironment: 'production'}; // options can also be a string of the config file path; defaultEnvironemnt is 'development' by default and thus optional.
+let options = {path: 'config.json', defaultEnvironment: 'production'}; // options can also be a string of the config file path; defaultEnvironemnt is 'development' by default and thus optional.
 let confim = new Confim(options);
 
 console.log(confim.module('foo'));
