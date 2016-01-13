@@ -2,13 +2,19 @@
  * Created by jnk on 13.01.16.
  */
 
+import util from 'util';
+
 class Config {
-    constructor(configFilePath) {
-        this._path = configFilePath;
+    constructor(options) {
+        options = options || {};
+        this._path = util.isString(options) ? options : options.path;
+
+        this._deaultEnvironment = util.isObject(options) ? (options.defaultEnvironment || 'development' ) : 'development';
 
         this._values = {};
-        this._values._env = {};
-        this._values['*'] = {};
+        this._values.env = {};
+        this._values.modules = {};
+        this._values.shared = {};
         this._aliases = {};
 
         this._loadConfig();
@@ -16,7 +22,7 @@ class Config {
 
     _loadConfig() {
         this._fileConf = require(this._path);
-        this._aliases = this._fileConf._aliases || {};
+        this._aliases = this._fileConf.aliases || {};
         this._loadEnv();
     }
 
@@ -28,10 +34,10 @@ class Config {
                 nep[ep[1]] = process.env[e];
                 this._values[this._aliases[ep[0].toLowerCase()] || ep[0].toLowerCase()] = nep;
             }else {
-                if (this._values['_env'][e] === undefined) {
-                    this._values['_env'][e] = {};
+                if (this._values.env[e] === undefined) {
+                    this._values.env[e] = {};
                 }
-                this._values['_env'][e] = process.env[e];
+                this._values.env[e] = process.env[e];
             }
         }
 
@@ -39,69 +45,64 @@ class Config {
     }
 
     _loadFile() {
-        let env = process.env.NODE_ENV || 'development';
+        let env = process.env.NODE_ENV || this._deaultEnvironment;
 
         if (this._fileConf['*']) {
-            if (this._fileConf['*']['*']) {
-                for (var e in this._fileConf['*']['*']) {
-                    if (this._values['*'][e] === undefined) {
-                        this._values['*'][e] = {};
+            if (this._fileConf.shared['*']) {
+                for (var e in this._fileConf.shared['*']) {
+                    if (this._values.shared[e] === undefined) {
+                        this._values.shared[e] = {};
                     }
-                    this._values['*'][e] = this._fileConf['*']['*'][e];
+                    this._values.shared[e] = this._fileConf.shared['*'][e];
                 }
             }
-            if (this._fileConf['*'][env]) {
-                for (var e in this._fileConf['*'][env]) {
-                    if (this._values['*'][e] === undefined) {
-                        this._values['*'][e] = {};
+            if (this._fileConf.shared[env]) {
+                for (var e in this._fileConf.shared[env]) {
+                    if (this._values.shared[e] === undefined) {
+                        this._values.shared[e] = {};
                     }
-                    this._values['*'][e] = this._fileConf['*'][env][e];
+                    this._values.shared[e] = this._fileConf.shared[env][e];
                 }
             }
         }
 
-        for (var ns in this._fileConf.namespaces || {}) {
-            if (this._fileConf.namespaces[ns]['*']) {
-                for (var e in this._fileConf.namespaces[ns]['*']) {
-                    if (this._values[ns] === undefined) {
-                        this._values[ns] = {};
-                        if (this._values[ns][e] === undefined) {
-                            this._values[ns][e] = {};
+        for (var ns in this._fileConf.modules || {}) {
+            if (this._fileConf.modules[ns]['*']) {
+                for (var e in this._fileConf.modules[ns]['*']) {
+                    if (this._values.modules[ns] === undefined) {
+                        this._values.modules[ns] = {};
+                        if (this._values.modules[ns][e] === undefined) {
+                            this._values.modules[ns][e] = {};
                         }
                     }
-                    this._values[ns][e] = this._fileConf.namespaces[ns]['*'][e];
+                    this._values.modules[ns][e] = this._fileConf.modules[ns]['*'][e];
                 }
             }
-            if (this._fileConf.namespaces[ns][env]) {
-                for (var e in this._fileConf.namespaces[ns][env]) {
-                    if (this._values[ns] === undefined) {
-                        this._values[ns] = {};
-                        if (this._values[ns][e] === undefined) {
-                            this._values[ns][e] = {};
+            if (this._fileConf.modules[ns][env]) {
+                for (var e in this._fileConf.modules[ns][env]) {
+                    if (this._values.modules[ns] === undefined) {
+                        this._values.modules[ns] = {};
+                        if (this._values.modules[ns][e] === undefined) {
+                            this._values.modules[ns][e] = {};
                         }
                     }
-                    this._values[ns][e] = this._fileConf.namespaces[ns][env][e];
+                    this._values.modules[ns][e] = this._fileConf.modules[ns][env][e];
                 }
             }
         }
-        this._env = this._values._env;
-    }
-
-    moduleNames() {
-        return Object.keys(this._fileConf.namespaces || {});
     }
 
     module(name) {
         name = name ? name.toLocaleLowerCase() : undefined;
-        return name ? (this._values[this._aliases[name]] || this._values[name]) : undefined;
+        return name ? (this._values[this._aliases.modules[name]] || this._values.modules[name]) : this._values.modules;
     }
 
-    shared() {
-        return this._values['*'];
+    shared(name) {
+        return name ? this._values.shared[name] : this._values.shared;
     }
 
     env(name) {
-        return name ? this._values._env[name] : this._values._env;
+        return name ? this._values.env[name] : this._values.env;
     }
 }
 
