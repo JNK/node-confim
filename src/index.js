@@ -94,7 +94,7 @@ class Config {
 
     module(name) {
         name = name ? name.toLocaleLowerCase() : undefined;
-        return name ? (this._values[this._aliases.modules[name]] || this._values.modules[name]) : this._values.modules;
+        return name ? (this._values.modules[this._aliases[name]] || this._values.modules[name]) : this._values.modules;
     }
 
     shared(name) {
