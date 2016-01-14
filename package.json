@@ -1,11 +1,12 @@
 {
   "name": "confim",
-  "version": "1.1.2",
+  "version": "1.2.0",
   "description": "A smart configuration management tool",
   "main": "dist/index.js",
   "scripts": {
     "test": "mocha test",
-    "compile": "babel src --out-dir dist --source-maps"
+    "compile": "babel src --out-dir dist --source-maps",
+    "prepublish": "npm run compile"
   },
   "repository": {
     "type": "git",
