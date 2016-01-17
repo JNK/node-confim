@@ -126,7 +126,7 @@ class Config {
             this._loopCheck(this._config.modules[module.toLowerCase()][env], this._values.modules[module]);
         }
 
-        if (!this.ignoreEnvironment) {
+        if (!this._params.ignoreEnvironment) {
             // load env into modules & shared
             let output = {};
             this._recurseOverKeys(process.env, output);
