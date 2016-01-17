@@ -4,12 +4,14 @@
 
 import util from 'util';
 import fs from 'fs';
+import findConfig from 'find-config';
 
 class Config {
 
     constructor(params) {
         // load params and defaults
         params = params || {};
+        params.file = params.file || 'config.js';
         params.defaultEnvironment = params.defaultEnvironment || process.env.CONFIM_defaultEnvironment || 'development';
         //params.checkWhenRequired = params.checkWhenRequired !== true || process.env.CONFIM_checkWhenRequired !== undefined;
         params.requiredKeyName = params.requiredKeyName || process.env.CONFIM_requiredKeyName || '___CONFIM___REQUIRED___';
@@ -17,29 +19,12 @@ class Config {
         this._params = params;
 
         // init variables
-        this._config = {};
+        this._config = params.raw || false;
         this._aliases = {};
         this._values = {shared: {}, modules: {}};
 
         // load config
-        if (this._params.file === undefined) {
-            if (this._params.raw === undefined) {
-                throw new Error('Either file or raw need to be defined!');
-                return;
-            } else if (util.isObject(this._params.raw)) {
-                this._config = this._params.raw;
-            } else {
-                throw new Error('raw parameter needs to be an object!');
-                return;
-            }
-        } else {
-            if (util.isString(this._params.file)) {
-                this._loadConfiguration();
-            } else {
-                throw new Error('file parameter needs to be a string!');
-                return;
-            }
-        }
+        this._loadConfiguration();
 
         // check config syntax
         this._validateConfigSyntax();
@@ -53,7 +38,9 @@ class Config {
      * @private
      */
     _loadConfiguration() {
-        this._config = JSON.parse(fs.readFileSync(this._params.file, 'utf8')) || {};
+        if (this._config === false) {
+            this._config = require(findConfig(this._params.file)) || {};
+        }
     }
 
     /**
