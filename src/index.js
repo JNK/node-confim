@@ -13,28 +13,29 @@ class Config {
         params.defaultEnvironment = params.defaultEnvironment || process.env.CONFIM_defaultEnvironment || 'development';
         //params.checkWhenRequired = params.checkWhenRequired !== true || process.env.CONFIM_checkWhenRequired !== undefined;
         params.requiredKeyName = params.requiredKeyName || process.env.CONFIM_requiredKeyName || '___CONFIM___REQUIRED___';
+        params.ignoreEnvironment = params.ignoreEnvironment === true;
         this._params = params;
 
         // init variables
         this._config = {};
         this._aliases = {};
-        this._values = {shared:{}, modules:{}};
+        this._values = {shared: {}, modules: {}};
 
         // load config
         if (this._params.file === undefined) {
             if (this._params.raw === undefined) {
                 throw new Error('Either file or raw need to be defined!');
                 return;
-            }else if (util.isObject(this._params.raw)) {
+            } else if (util.isObject(this._params.raw)) {
                 this._config = this._params.raw;
-            }else {
+            } else {
                 throw new Error('raw parameter needs to be an object!');
                 return;
             }
-        }else {
+        } else {
             if (util.isString(this._params.file)) {
                 this._loadConfiguration();
-            }else {
+            } else {
                 throw new Error('file parameter needs to be a string!');
                 return;
             }
@@ -64,7 +65,7 @@ class Config {
         if (!util.isObject(this._config.aliases)) {
             throw new Error('aliases needs to be of type Object{aliasName: realName, ...}!');
             return;
-        }else {
+        } else {
             for (var key in this._config.aliases) {
                 if (!util.isString(this._config.aliases[key])) {
                     throw new Error('Alias value of key "' + key + '" is not a string!');
@@ -77,7 +78,7 @@ class Config {
         if (!util.isObject(this._config.shared)) {
             throw new Error('shared is not an object!');
             return;
-        }else {
+        } else {
             for (var key in this._config.shared) {
                 if (!util.isObject(this._config.shared[key])) {
                     throw new Error('Shared value of key "' + key + '" is not an object!');
@@ -90,7 +91,7 @@ class Config {
         if (!util.isObject(this._config.modules)) {
             throw new Error('modules is not an object!');
             return;
-        }else {
+        } else {
             for (var key in this._config.modules) {
                 if (!util.isObject(this._config.modules[key])) {
                     throw new Error('module value of key "' + key + '" is not an object!');
@@ -125,25 +126,27 @@ class Config {
             this._loopCheck(this._config.modules[module.toLowerCase()][env], this._values.modules[module]);
         }
 
-        // load env into modules & shared
-        let output = {};
-        this._recurseOverKeys(process.env, output);
-        for (let key in output) {
-            let value = output[key];
-            if (util.isString(value)) {
-                this._values.shared[key] = value;
-            }else {
-                if (this._values.modules[key.toLowerCase()] === undefined) {
-                    this._values.modules[key.toLowerCase()] = value;
-                }else {
-                    this._values.modules[key.toLowerCase()] = util._extend(this._values.modules[key.toLowerCase()], value);
+        if (!this.ignoreEnvironment) {
+            // load env into modules & shared
+            let output = {};
+            this._recurseOverKeys(process.env, output);
+            for (let key in output) {
+                let value = output[key];
+                if (util.isString(value)) {
+                    this._values.shared[key] = value;
+                } else {
+                    if (this._values.modules[key.toLowerCase()] === undefined) {
+                        this._values.modules[key.toLowerCase()] = value;
+                    } else {
+                        this._values.modules[key.toLowerCase()] = util._extend(this._values.modules[key.toLowerCase()], value);
+                    }
                 }
             }
         }
 
         //if (this._params.checkWhenRequired === false) {
-            this._checkMissingRequirements(this._values.shared, '');
-            this._checkMissingRequirements(this._values.modules, '');
+        this._checkMissingRequirements(this._values.shared, '');
+        this._checkMissingRequirements(this._values.modules, '');
         //}
     }
 
@@ -153,14 +156,14 @@ class Config {
             if (parts[0] !== '') {
                 var fp = parts[0];
                 parts.splice(0, 1);
-                if ( output[fp] === undefined) {
+                if (output[fp] === undefined) {
                     output[fp] = {};
                 }
                 if (parts.length === 1) {
                     output[fp][parts.join('_')] = input[key];
-                }else if (parts.length === 0) {
+                } else if (parts.length === 0) {
                     output[fp] = input[key];
-                }else {
+                } else {
                     var nk = parts.join('_');
                     var _input = {};
                     _input[nk] = input[key]
@@ -176,13 +179,13 @@ class Config {
                 var nk = key === '' ? v.toUpperCase() : key + '_' + v;
                 this._checkMissingRequirements(input[v], nk);
             }
-        }else if (util.isArray(input)) {
+        } else if (util.isArray(input)) {
             for (var v in input) {
                 this._checkMissingRequirements(input[v], key);
             }
-        }else if (util.isString(input)) {
+        } else if (util.isString(input)) {
             if (input === this._params.requiredKeyName) {
-                throw new Error('Missing key - "' + key +'"!');
+                throw new Error('Missing key - "' + key + '"!');
             }
         }
     }
