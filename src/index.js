@@ -40,7 +40,6 @@ class Config {
     _loadConfiguration() {
         if (this._config === false) {
             let path = findConfig(this._params.file);
-            console.log(path);
             this._config = require(path) || {};
         }
     }
