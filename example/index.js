@@ -13,8 +13,12 @@ var params = {
     requiredKeyName: '___CONFIM___REQUIRED___' // Specify what string implies that the property is required; defaults to '___CONFIM___REQUIRED___'
 };
 // Create a confim instance with the above parameters
-var confim = new Confim(params);
-
+var cl = Confim.load('', 'config.json');
+console.log(cl);
+var shared = cl.shared,
+    modules = cl.modules,
+    conf = cl.conf,
+    confim = confim;
 
 // load properties
 var sharedLogLevel = confim.shared().loglevel; // either through the shared() method

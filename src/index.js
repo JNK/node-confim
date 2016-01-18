@@ -39,7 +39,9 @@ class Config {
      */
     _loadConfiguration() {
         if (this._config === false) {
-            this._config = require(findConfig(this._params.file)) || {};
+            let path = findConfig(this._params.file);
+            console.log(path);
+            this._config = require(path) || {};
         }
     }
 
@@ -204,4 +206,10 @@ class Config {
     }
 }
 
-export default Config;
+export default {
+    Config,
+    load: (name, cf) => {
+        let c = new Config({ignoreEnvironment: true, file: (cf || 'config.js')});
+        return {shared: c.shared(), modules: c.module(), conf: c.module(name), confim: c};
+    }
+};
