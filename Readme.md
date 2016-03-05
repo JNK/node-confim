@@ -10,12 +10,44 @@ NPM has you covered: ```npm i -S confim```
 
 ## Example
 
-Example configuration file ```config.json```
-```json
-{
-  "aliases": {
-    "primary-server": "web-server-two"
-  },
+Example configuration file ```config.js```
+```javascript
+module.exports = {
+    modules: {
+        database: {
+            default: {
+                port: 1234
+            },
+            development: {
+                host: 'database.dev.internal'
+            },
+            integration: {
+                host: 'database.int.internal'
+            },
+            production: {
+                host: 'database.prod.internal'
+            }
+        }
+    },
+    shared: {
+        default: {
+             loglevel: "info"
+            },
+            "development": {
+              "loglevel": "debug"
+            },
+            "integration": {
+              "loglevel": "error"
+            },
+            "production": {
+              "loglevel": "warn"
+            }
+    },
+    aliases: {
+        'primary-server': "web-server-two"
+    }
+};
+
   "shared": {
     "*": {
       "loglevel": "info"
@@ -80,38 +112,21 @@ Example configuration file ```config.json```
 - an alias for ```web-server-two``` named ```primary-server```
 
 ##### How it works
-The ```*``` key in the modules and in the shared key is the default to use for any environment where the key is not defined.
-We use a special ```___CONFIM___REQUIRED___``` key in database module. This makes sure that the value is present as environment variable or in a specific environment.
+The ```default``` key in the modules and in the shared key is the default to use for any environment where the key is not defined.
+We use a special ```__CONFIM_REQUIRED__``` key in database module. This makes sure that the value is present as environment variable or in a specific environment.
 In the example ```password``` is defined in development unlike integration and production. When you do not provide it via ```env DATABASE_password=bla``` and the environment is not development the app will fail as soon as the configuration is read from file
 
 ##### Get the data
-Create a ```ìndex.js``` file in the same directory as the config file and paste the following input
+Create a ```ìndex.js``` file in the same directory or a child directory of the config.js file and paste the following content.
 ```javascript
 // file: index.js
 
-// var Confim = require('confim').default; // import confim using es5
-import Confim from 'confim'; // import confim using es6
+var Confim = require('confim').default; // import confim using es5
+//import Confim from 'confim'; // import confim using es6
 
-// Configure confim
-var params = {
-    file: 'config.json',                // required if raw not set - the path of the file to load
-    raw: {},                            // optional - optionally pass a configuration object
-    defaultEnvironment: 'development',  // optional - the NODE_ENV to use if not set; defaults to 'development'
-    requiredKeyName: '___CONFIM___REQUIRED___' // Specify what string implies that the property is required; defaults to '___CONFIM___REQUIRED___'
-};
-// Create a confim instance with the above parameters
-var confim = new Confim.Confim(params);
-
-
-// load properties
-var sharedLogLevel = confim.shared().loglevel; // either through the shared() method
-console.log('Shared Log Level: "%s"', sharedLogLevel);
-
-var sameLogLevel = confim.module('primary-server').loglevel; // or through a module - notice the alias
-console.log('Main Server Log Level: "%s" (same as shared)', sameLogLevel);
-
-var specialLogLevel = confim.module('database').loglevel; // this will always be 'info' if not altered through DB_info env variable
-console.log('DB Log Level: "%s"', specialLogLevel);
+// Get database config merged with shared and of current environment
+var dbConf = Confim('database').conf;
+console.log(dbConf);
 
 ```
 
@@ -123,8 +138,5 @@ Now try running the example: ```node index.js```; When you try to run it in the 
 Just create an issue on GitHub and I will see what I can do...
 
 ## Future plans
-- Allow configuration updates (get notified on a module level when a configuration changes)
-- Access configuration via http(s) and check for updates periodically
-- Pick config.json as default config file at project root
 - Nicer error handling
 - Translate keys to multi-level objects

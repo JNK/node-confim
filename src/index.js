@@ -6,6 +6,19 @@ import util from 'util';
 import fs from 'fs';
 import findConfig from 'find-config';
 
+export default (name, opts) => {
+    let confim = new Config(opts);
+
+    let conf = confim.module(name);
+
+    return {
+        name,
+        conf,
+        confim
+    }
+};
+
+
 class Config {
 
     constructor(params) {
@@ -14,7 +27,7 @@ class Config {
         params.file = params.file || 'config.js';
         params.defaultEnvironment = params.defaultEnvironment || process.env.CONFIM_defaultEnvironment || 'development';
         //params.checkWhenRequired = params.checkWhenRequired !== true || process.env.CONFIM_checkWhenRequired !== undefined;
-        params.requiredKeyName = params.requiredKeyName || process.env.CONFIM_requiredKeyName || '___CONFIM___REQUIRED___';
+        params.requiredKeyName = params.requiredKeyName || process.env.CONFIM_requiredKeyName || '__CONFIM_REQUIRED__';
         params.ignoreEnvironment = params.ignoreEnvironment === true;
         this._params = params;
 
@@ -102,7 +115,7 @@ class Config {
         this._aliases = this._config.aliases;
 
         // load shared
-        this._loopCheck(this._config.shared['*'], this._values.shared);
+        this._loopCheck(this._config.shared['default'], this._values.shared);
         this._loopCheck(this._config.shared[env], this._values.shared);
 
         // load modules
@@ -110,7 +123,7 @@ class Config {
             if (this._values.modules[module.toLowerCase()] === undefined) {
                 this._values.modules[module.toLowerCase()] = util._extend({}, this._values.shared);
             }
-            this._loopCheck(this._config.modules[module.toLowerCase()]['*'], this._values.modules[module]);
+            this._loopCheck(this._config.modules[module.toLowerCase()]['default'], this._values.modules[module]);
             this._loopCheck(this._config.modules[module.toLowerCase()][env], this._values.modules[module]);
         }
 
@@ -204,7 +217,7 @@ class Config {
         return value;
     }
 }
-
+/*
 export default {
     Config,
     load: (name, cf) => {
@@ -212,3 +225,4 @@ export default {
         return {shared: c.shared(), modules: c.module(), conf: c.module(name), confim: c};
     }
 };
+*/
